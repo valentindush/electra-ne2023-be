@@ -1,14 +1,16 @@
 import { PrismaClient } from '@prisma/client'
 import express, { Request, Response } from 'express'
-const prisma = new PrismaClient()
+import dotenv from "dotenv"
 
 const app = express()
 const PORT = 3000
 
+dotenv.config()
+
+const prisma = new PrismaClient()
+
 async function main() {
     app.use(express.json())
-    app.use("/api/v1/")
-
     app.listen(PORT, () => {
         console.log("Server up on port :" + PORT)
     })
