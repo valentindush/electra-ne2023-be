@@ -11,5 +11,10 @@ export const generateToken = (username: string) => {
 }
 
 export const verifyToken = (token: string) => {
-    
+    try {
+        const username = jwt.verify(token, `${process.env.JWT_SECRET}`)
+        return username
+    } catch (error) {
+        return null
+    }
 }
