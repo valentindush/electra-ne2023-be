@@ -1,24 +1,20 @@
 import { Request, Response } from "express";
-import vine, {errors} from '@vinejs/vine'
-import { schema } from "./auth.schema";
 import * as Bcrypt from "bcrypt"
 import {PrismaClient } from "@prisma/client";
 import { generateToken } from "../utils/jwt.util";
 
 const prisma = new PrismaClient()
 
-const register = async (req:Request, res: Response) =>{
+export const register = async (req:Request, res: Response) =>{
     const data = req.body
     try {
-        const validator = vine.compile(schema)
-        const output = await validator.validate(data)
 
-        const hash = await Bcrypt.hash(output.password, 10)
+        const hash = await Bcrypt.hash(`${data.password}`, 10)
 
         const newUser = await prisma.user.create(
             {
                 data: {
-                    username: output.username,
+                    username: `${data.username}`,
                     password: hash
                 }
             }
@@ -29,14 +25,34 @@ const register = async (req:Request, res: Response) =>{
         return res.status(201).json({token: token})
 
     } catch (error) {
-        if(error instanceof errors.E_VALIDATION_ERROR){
-            return res.status(400).json({message: error.messages})
-        }
-
         return res.status(500)
     }
 }
 
-export const login = (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response) => {
+    const data = req.body
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                username: `${data.username}`
+            }
+        })
 
+        if(!user){
+            return res.status(400).json({message: "invalid credentials"})
+        }
+
+        const isPasswordValid = await Bcrypt.compare(`${data.password}`, user.password??"")
+
+        if(!isPasswordValid){
+            return res.status(400).json({message: "invalid credentials"})
+        }
+
+        const token = generateToken(`${data.username}`)
+
+        return res.json({token})
+
+    } catch (error) {
+        return res.status(500)
+    }
 }

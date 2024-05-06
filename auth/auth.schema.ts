@@ -1,10 +1,6 @@
-import vine from "@vinejs/vine"
+import {z} from 'zod'
 
-export const schema = vine.object({
-    username: vine.string().minLength(3),
-    password: vine
-        .string()
-        .minLength(8)
-        .maxLength(32)
-        .confirmed()
+export const authSchema = z.object({
+    username: z.string().trim().min(3).max(20),
+    password: z.string().min(8).max(36)
 })
